@@ -102,6 +102,74 @@ textarea {
   min-height: 100px;
   resize: vertical;
 }
+.markdownContent {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #333;
+}
+
+.markdownContent p {
+  margin-bottom: 1rem;
+}
+
+.markdownContent ul, 
+.markdownContent ol {
+  margin-bottom: 1rem;
+  padding-left: 2rem;
+}
+
+.markdownContent li {
+  margin-bottom: 0.5rem;
+}
+
+.markdownContent a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.markdownContent a:hover {
+  text-decoration: underline;
+}
+
+.markdownContent strong {
+  font-weight: bold;
+}
+
+.markdownContent em {
+  font-style: italic;
+}
+.markdown-preview {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+}
+
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3 {
+  border-bottom: 1px solid #eaecef;
+  padding-bottom: 0.3em;
+}
+
+.markdown-preview ul {
+  list-style-type: disc;
+  margin-left: 20px;
+}
+
+.markdown-preview li {
+  margin-bottom: 0.5em;
+}
+
+.markdown-preview p {
+  margin-bottom: 1em;
+}
+
+.markdown-preview strong {
+  font-weight: bold;
+}
+
+.markdown-preview em {
+  font-style: italic;
+}
 
 .btn {
   display: inline-flex;

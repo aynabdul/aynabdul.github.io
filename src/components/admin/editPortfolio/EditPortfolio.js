@@ -25,17 +25,29 @@ import { getCurrentUser } from "../../../services/authServices";
 import Notification from "../Notification";
 import { db } from "../../../firebaseConfig";
 import styles from "./EditPortfolio.module.css";
+import ReactMarkdown from 'react-markdown';
+import MdEditor from 'react-markdown-editor-lite';
+import 'react-markdown-editor-lite/lib/index.css';
+
+function parseMarkdown(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^- (.*)$/gm, '<li>$1</li>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br />');
+}
 
 const EditPortfolio = ({ userId }) => {
   const [userData, setUserData] = useState(null);
   const [username, setUsername] = useState("");
-  const [bio, setBio] = useState("");
   const [title, setTitle] = useState("");
   const [pfp, setPfp] = useState(null);
   const [pfpUrl, setPfpUrl] = useState("");
   const [projects, setProjects] = useState([]);
   const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState("");
+  const [bio, setBio] = useState('');
   const [pfpScale, setPfpScale] = useState(1);
   const [pfpOffsetX, setPfpOffsetX] = useState(0);
   const [pfpOffsetY, setPfpOffsetY] = useState(0);
@@ -307,6 +319,9 @@ const EditPortfolio = ({ userId }) => {
       setPfpUrl(URL.createObjectURL(e.target.files[0]));
     }
   };
+  const handleBioChange = (e) => {
+    setBio(e.target.value);
+  };
 
   if (!userData) return <div className="loading">Loading...</div>;
 
@@ -401,13 +416,17 @@ const EditPortfolio = ({ userId }) => {
               />
             </div>
             <div className={styles.formGroup}>
-              <label htmlFor="bio">Bio</label>
+            <label htmlFor="bio">Bio</label>
               <textarea
                 id="bio"
                 value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="Bio"
+                onChange={handleBioChange}
+                placeholder="(for formatting: **Bold**, *Italic*, * Bullet points, Line break: two spaces,  Paragraph: blank line)"
+                rows={10}
               />
+              <div className={styles.preview}>
+                <div dangerouslySetInnerHTML={{ __html: parseMarkdown(bio) }} />
+              </div>
             </div>
           </div>
           <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`}>
@@ -563,7 +582,7 @@ const EditPortfolio = ({ userId }) => {
                 }
               />
               <textarea
-                placeholder="Edit description"
+                placeholder="(for formatting: **Bold**, *Italic*, * Bullet points, Line break: two spaces,  Paragraph: blank line)"
                 value={editingProject.description}
                 onChange={(e) =>
                   setEditingProject({
@@ -571,9 +590,10 @@ const EditPortfolio = ({ userId }) => {
                     description: e.target.value,
                   })
                 }
+                rows={5}
               />
               <textarea
-                placeholder="Edit contribution"
+                placeholder="(for formatting: **Bold**, *Italic*, * Bullet points, Line break: two spaces,  Paragraph: blank line)"
                 value={editingProject.contribution}
                 onChange={(e) =>
                   setEditingProject({
@@ -581,10 +601,11 @@ const EditPortfolio = ({ userId }) => {
                     contribution: e.target.value,
                   })
                 }
+                rows={5}
               />
               <input
                 type="text"
-                placeholder="Edit tools (comma separated)"
+                placeholder="Edit tools (separated each tool with a comma)"
                 value={editingProject.tools}
                 onChange={(e) =>
                   setEditingProject({
@@ -666,23 +687,25 @@ const EditPortfolio = ({ userId }) => {
           <div className={styles.formGroup}>
             <label htmlFor="project-description">Description</label>
             <textarea
-              id="projectDescription"
-              placeholder="Description"
+              id="project-description"
+              placeholder="(for formatting: **Bold**, *Italic*, * Bullet points, Line break: two spaces,  Paragraph: blank line)"
               value={newProject.description}
               onChange={(e) =>
                 setNewProject({ ...newProject, description: e.target.value })
               }
+              rows={5}
             />
           </div>
           <div className={styles.formGroup}>
             <label htmlFor="project-contribution">Contribution</label>
             <textarea
-              id="projectContribution"
-              placeholder="Contribution"
+              id="project-contribution"
+              placeholder="(for formatting: **Bold**, *Italic*, * Bullet points, Line break: two spaces,  Paragraph: blank line)"
               value={newProject.contribution}
               onChange={(e) =>
                 setNewProject({ ...newProject, contribution: e.target.value })
               }
+              rows={5}
             />
           </div>
           <div className={styles.formGroup}>

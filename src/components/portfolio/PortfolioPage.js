@@ -4,8 +4,19 @@ import { getFirestore, doc, getDoc, query, where, collection, getDocs } from 'fi
 import emailjs from 'emailjs-com';
 import app from '../../firebaseConfig';
 import styles from './PortfolioPage.module.css';
+import ReactMarkdown from 'react-markdown';
 
 const db = getFirestore(app);
+
+function parseMarkdown(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^\* (.+)$/gm, '<ul><li>$1</li></ul>')
+    .replace(/<\/ul>\s*<ul>/g, '')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br />');
+}
 
 const PortfolioPage = () => {
   const { username } = useParams();
@@ -151,7 +162,9 @@ const PortfolioPage = () => {
           <div className={styles.profileInfo}>
             <h1>{userData.username}</h1>
             <h2>{userData.title}</h2>
-            <p>{userData.bio}</p>
+            <div className={styles.markdownContent}>
+              <div dangerouslySetInnerHTML={{ __html: parseMarkdown(userData.bio) }} />
+            </div>
           </div>
         </div>
       </section>
@@ -173,9 +186,14 @@ const PortfolioPage = () => {
                       <p className={styles.recruiter}>{project.recruiterName}</p>
                       <div className={styles.projectDetails}>
                         <div className={styles.projectInfo}>
-                          <p>{project.description}</p>
-                          <p><strong>Contribution:</strong> {project.contribution}</p>
+                        <div className={styles.markdownContent}>
+                        <div dangerouslySetInnerHTML={{ __html: parseMarkdown(project.description) }} />
                         </div>
+                        <div className={styles.markdownContent}>
+                          <strong>My Contribution:</strong>
+                          <div dangerouslySetInnerHTML={{ __html: parseMarkdown(project.contribution) }} />
+                        </div>
+                        </div>                        
                         <div className={styles.tools}>
                           <strong>Tools:</strong>
                           <ul>
