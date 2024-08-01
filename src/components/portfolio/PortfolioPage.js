@@ -24,46 +24,81 @@ const PortfolioPage = () => {
   const [projects, setProjects] = useState([]);
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState('');
-  const [openCategory, setOpenCategory] = useState(null); 
-  const [activeSection, setActiveSection] = useState('introduction'); 
+  const [isLoading, setIsLoading] = useState(true);
+  const [openCategory, setOpenCategory] = useState(null);
+  const [activeSection, setActiveSection] = useState('introduction');
 
   useEffect(() => {
+    const maxRetries = 3;
+    let retryCount = 0;
+
     const fetchUserData = async () => {
-      try {
-        const q = query(collection(db, "usernames"), where("username", "==", username));
-        const querySnapshot = await getDocs(q);
+      setIsLoading(true);
+      setError('');
 
-        if (querySnapshot.empty) {
-          setError("User not found");
-          return;
-        }
+      const attemptFetch = async () => {
+        try {
+          const q = query(collection(db, "usernames"), where("username", "==", username));
+          const querySnapshot = await getDocs(q);
 
-        const usernameDoc = querySnapshot.docs[0];
-        const uid = usernameDoc.id;
-
-        const userDoc = await getDoc(doc(db, "users", uid));
-        if (userDoc.exists()) {
-          setUserData(userDoc.data());
-
-          const projectsQuery = query(collection(db, "projects"), where("uid", "==", uid));
-          const projectsSnapshot = await getDocs(projectsQuery);
-          const projectsData = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          setProjects(projectsData);
-
-          const categoriesQuery = query(collection(db, "categories"), where("uid", "==", uid));
-          const categoriesSnapshot = await getDocs(categoriesQuery);
-          const categoriesData = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          setCategories(categoriesData);
-
-          if (categoriesData.length > 0) {
-            setOpenCategory(categoriesData[0].id);
+          if (querySnapshot.empty) {
+            setError("User not found");
+            return;
           }
-        } else {
-          setError("User data not found");
+
+          const usernameDoc = querySnapshot.docs[0];
+          const uid = usernameDoc.id;
+
+          const userDoc = await getDoc(doc(db, "users", uid));
+          if (userDoc.exists()) {
+            setUserData(userDoc.data());
+            
+            // Fetch projects and categories separately
+            fetchProjects(uid);
+            fetchCategories(uid);
+          } else {
+            setError("User data not found");
+          }
+        } catch (error) {
+          console.error("Fetch attempt error:", error);
+          if (retryCount < maxRetries) {
+            retryCount++;
+            console.log(`Retry attempt ${retryCount}`);
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retrying
+            return attemptFetch();
+          } else {
+            setError("Error fetching user data. Please check your internet connection and try again.");
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      await attemptFetch();
+    };
+
+    const fetchProjects = async (uid) => {
+      try {
+        const projectsQuery = query(collection(db, "projects"), where("uid", "==", uid));
+        const projectsSnapshot = await getDocs(projectsQuery);
+        const projectsData = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setProjects(projectsData);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    };
+
+    const fetchCategories = async (uid) => {
+      try {
+        const categoriesQuery = query(collection(db, "categories"), where("uid", "==", uid));
+        const categoriesSnapshot = await getDocs(categoriesQuery);
+        const categoriesData = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setCategories(categoriesData);
+        if (categoriesData.length > 0) {
+          setOpenCategory(categoriesData[0].id);
         }
       } catch (error) {
-        setError("Error fetching user data");
-        console.error(error);
+        console.error("Error fetching categories:", error);
       }
     };
 
@@ -120,12 +155,16 @@ const PortfolioPage = () => {
     e.target.to_email.value = email;
   };
 
+  if (isLoading) {
+    return <div className={styles.loading}>Loading... Please wait.</div>;
+  }
+
   if (error) {
     return <div className={styles.error}>{error}</div>;
   }
 
   if (!userData) {
-    return <div className={styles.loading}>Loading...</div>;
+    return <div className={styles.error}>No user data available.</div>;
   }
 
   return (
